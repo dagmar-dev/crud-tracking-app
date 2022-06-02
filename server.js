@@ -8,14 +8,8 @@ app.listen(3000, function(){
 })
 app.use(bodyParser.urlencoded( {extended: true } ) )
 
-//Handlers
-app.get('/', (req,res)=> {
-    res.sendFile(__dirname +'/index.html')
-})
 
-app.post('/packages', (req, res) => {
-    console.log(req.body)
-})
+
 
 //Database connect
 
@@ -23,6 +17,29 @@ app.post('/packages', (req, res) => {
 
 MongoClient.connect(connectionString)
     .then((client) => {
-        console.log('Connected to Database')
+        const db = client.db('packages-tracker')
+        const packagesCollection = db.collection('packages')
+        app.post('/packages', (req, res) => {
+            packagesCollection
+                .insertOne(req.body)
+                .then((result) => {
+                    res.redirect(' /')
+                })
+                .catch((error) => console.error(error))
+        })
+        app.get('/', (req, res) => {
+            db.collection('packages')
+                .find()
+                .toArray()
+                .then((results) => {
+                    console.log(results)
+                     res.sendFile(__dirname + '/index.html')
+                })
+                .catch((error) => console.error(error))
+        })
+
+    
     })
     .catch((error) => console.error(error))
+
+    
